@@ -1,6 +1,7 @@
 <?php
 
 namespace OwaSdk\Tracker;
+use AllowDynamicProperties;
 use OwaSdk\Tracker\State;
 use OwaSdk\OwaClient;
 use OwaSdk\Tracker\TrackingEvent;
@@ -19,7 +20,7 @@ use OwaSdk\sdk as sdk;
  * @license     http://www.gnu.org/copyleft/gpl.html GPL v2.0
  */
 
-class TrackerClient extends OwaClient {
+#[AllowDynamicProperties] class TrackerClient extends OwaClient {
 	
 	var $config;
 	
