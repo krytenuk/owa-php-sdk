@@ -2,7 +2,6 @@
 
 namespace OwaSdk\Sites;
 use OwaSdk\OwaClient;
-use OwaSdk\sdk as sdk;
 
 /**
  * Open Web Analytics - An Open Source Web Analytics Framework
@@ -19,7 +18,7 @@ use OwaSdk\sdk as sdk;
 
 class SitesClient extends OwaClient {
 	
-	var $config;
+	var array $config;
 	
     public function __construct($config = null) {
 		
@@ -35,10 +34,8 @@ class SitesClient extends OwaClient {
 		    'http_method'	=> 'GET',
 		    'uri' 			=> '/base/v1/sites'
 	    ];
-	    
-	    $res = $this->makeRequest( $request );
-		
-		return $res;
+
+        return $this->makeRequest( $request );
 		
 	    
     }
@@ -63,11 +60,7 @@ class SitesClient extends OwaClient {
 		    'form_params'	=> $params
 	    ];
 
-	    $res = $this->makeRequest( $request );
-	    
-	    return $res;
+        return $this->makeRequest( $request );
     }
     
 }
-
-?>

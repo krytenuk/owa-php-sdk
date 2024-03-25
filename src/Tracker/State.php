@@ -19,35 +19,21 @@ class State
 {
 
     private $config;
-    private $stores;
-    private $stores_meta;
-    private $is_dirty;
-    private $dirty_stores;
-    private $default_store_type;
-    private $stores_with_cdh;
-    private $initial_state;
-    private $cookies;
+    private array $stores = [];
+    private array $stores_meta = [];
+    private array $stores_with_cdh = [];
+    private array $initial_state = [];
+    private array $cookies = [];
 
     function __construct($config = [])
     {
 
         $this->config = [
-
             'cookie_domain' => ''
         ];
 
         // merge incoming config params
         $this->config = array_merge($this->config, $config);
-
-
-        $this->cookies = [];
-        $this->stores = [];
-        $this->stores_meta = [];
-        $this->is_dirty;
-        $this->dirty_stores;
-        $this->default_store_type = 'cookie';
-        $this->stores_with_cdh = [];
-        $this->initial_state = [];
 
         $this->initializeStores();
     }
@@ -60,9 +46,11 @@ class State
             return $this->config[$name];
         }
 
+        return null;
+
     }
 
-    function registerStore($name, $expiration, $length = '', $format = 'json', $type = 'cookie', $cdh = null)
+    function registerStore($name, $expiration, $length = '', $format = 'json', $type = 'cookie', $cdh = null): void
     {
 
         $this->stores_meta[$name] = [
@@ -108,10 +96,10 @@ class State
         }
     }
 
-    function setState($store, $name, $value, $store_type = '', $is_perminent = false)
+    function setState($store, $name, $value, $store_type = '', $is_permanent = false): void
     {
 
-        sdk::debug(sprintf('populating state for store: %s, name: %s, value: %s, store type: %s, is_perm: %s', $store, $name, print_r($value, true), $store_type, $is_perminent));
+        sdk::debug(sprintf('populating state for store: %s, name: %s, value: %s, store type: %s, is_perm: %s', $store, $name, print_r($value, true), $store_type, $is_permanent));
 
         // set values
         if (empty($name)) {
@@ -145,9 +133,6 @@ class State
             }
 
         }
-
-        $this->dirty_stores[] = $store;
-        //owa_coreAPI::debug(print_r($this->stores, true));
     }
 
     function isCdhRequired($store_name)
@@ -156,25 +141,27 @@ class State
         if (isset($this->stores_meta[$store_name])) {
             return $this->stores_meta[$store_name]['cdh_required'];
         }
+
+        return null;
     }
 
-    function set($store, $name, $value, $store_type = '', $is_perminent = false)
+    function set($store, $name, $value, $store_type = '', $is_permanent = false): void
     {
 
         if (!isset($this->stores[$store])) {
             $this->loadState($store);
         }
 
-        $this->setState($store, $name, $value, $store_type, $is_perminent);
+        $this->setState($store, $name, $value, $store_type, $is_permanent);
 
-        // persist immeadiately if the store type is cookie
+        // persist immediately if the store type is cookie
         if ($this->stores_meta[$store]['type'] === 'cookie') {
 
             $this->persistState($store);
         }
     }
 
-    function persistState($store)
+    function persistState($store): void
     {
 
         //check to see that store exists.
@@ -188,7 +175,7 @@ class State
                     case 'cookie':
 
                         // check for old style assoc format
-                        // @todo eliminiate assoc style cookie format.
+                        // @todo eliminate assoc style cookie format.
                         if ($this->stores_meta[$store]['format'] === 'assoc') {
                             $cookie_value = $this->implode_assoc('=>', '|||', $this->stores[$store]);
                         } else {
@@ -214,28 +201,25 @@ class State
         }
     }
 
-    function setInitialState($store, $value, $store_type = '')
+    function setInitialState($store, $value): void
     {
-
         if ($value) {
             $this->initial_state[$store] = $value;
         }
     }
 
-    function loadState($store, $name = '', $value = '', $store_type = 'cookie')
+    function loadState($store, $name = '', $value = '', $store_type = 'cookie'): void
     {
-
+        $possible_values = [];
         //get possible values
         if (!$value && isset($this->initial_state[$store])) {
             $possible_values = $this->initial_state[$store];
-        } else {
-            return;
         }
 
 
         //count values
         $count = count($possible_values);
-        // loop throught values looking for a domain hash match or just using the last value.
+        // loop through values looking for a domain hash match or just using the last value.
         foreach ($possible_values as $k => $value) {
             // check format of value
 
@@ -244,8 +228,6 @@ class State
             } elseif (strpos($value, ":")) {
                 $value = json_decode($value);
                 $value = (array)$value;
-            } else {
-                $value = $value;
             }
 
             if (in_array($store, $this->stores_with_cdh)) {
@@ -258,12 +240,12 @@ class State
                     // return as the cdh's do not match
                     if ($cdh_from_state === $runtime_cdh) {
                         sdk::debug("cdh match:  $cdh_from_state and $runtime_cdh");
-                        return $this->setState($store, $name, $value, $store_type);
+                        $this->setState($store, $name, $value, $store_type);
                     } else {
-                        // cookie domains do not match so we need to delete the cookie in the offending domain
+                        // cookie domains do not match, so we need to delete the cookie in the offending domain
                         // which is always likely to be a sub.domain.com and thus HTTP_HOST.
                         // if cookie is not deleted then new cookies set on .domain.com will never be seen by PHP
-                        // as only the sub domain cookies are available.
+                        // as only the subdomain cookies are available.
                         sdk::debug("Not loading state store: $store. Domain hashes do not match - runtime: $runtime_cdh, cookie: $cdh_from_state");
                         //owa_coreAPI::debug("deleting cookie: owa_$store");
                         //owa_coreAPI::deleteCookie($store,'/', $_SERVER['HTTP_HOST']);
@@ -273,20 +255,19 @@ class State
                 } else {
 
                     sdk::debug("Not loading state store: $store. No domain hash found.");
-                    return;
                 }
 
             } else {
                 // just set the state with the last value
                 if ($k === $count - 1) {
                     sdk::debug("loading last value in initial state container for store: $store");
-                    return $this->setState($store, $name, $value, $store_type);
+                    $this->setState($store, $name, $value, $store_type);
                 }
             }
         }
     }
 
-    function clear($store, $name = '')
+    function clear($store, $name = ''): void
     {
 
         if (!isset($this->stores[$store])) {
@@ -301,7 +282,7 @@ class State
 
                 if ($this->stores_meta[$store]['type'] === 'cookie') {
 
-                    return $this->deleteCookie($store);
+                    $this->deleteCookie($store);
                 }
 
             } else {
@@ -311,30 +292,25 @@ class State
 
                     if ($this->stores_meta[$store]['type'] === 'cookie') {
 
-                        return $this->persistState($store);
+                        $this->persistState($store);
                     }
                 }
             }
         }
     }
 
-    function getPermExpiration()
+    public function getPermExpiration(): float|int
     {
-
-        $time = time() + 3600 * 24 * 365 * 15;
-        return $time;
+        return time() + 3600 * 24 * 365 * 15;
     }
 
-    function addStores($array)
+    public function addStores($array): void
     {
-
         $this->stores = array_merge($this->stores, $array);
-        return;
     }
 
-    function getCookieDomainHash($domain = '')
+    function getCookieDomainHash($domain = ''): string
     {
-
         if (!$domain) {
             $domain = $this->getSetting('cookie_domain');
         }
@@ -350,7 +326,7 @@ class State
      * @param array $array
      * @return string
      */
-    public static function implode_assoc($inner_glue, $outer_glue, $array)
+    public static function implode_assoc(string $inner_glue, string $outer_glue, array $array): string
     {
         $output = [];
         foreach ($array as $key => $item) {
@@ -360,12 +336,10 @@ class State
         return implode($outer_glue, $output);
     }
 
-    private function createCookie($cookie_name, $cookie_value, $expires = 0, $path = '/', $domain = '')
+    private function createCookie($cookie_name, $cookie_value, $expires = 0, $path = '/', $domain = ''): void
     {
 
-        $samesite = 'lax';
-        $secure = false;
-        $httponly = false;
+        $sameSite = 'lax';
 
         if (!$domain) {
 
@@ -388,11 +362,11 @@ class State
             $expires = 0;
         }
 
-        // check for php version to set samesite attribute.
+        // check for php version to set same-site attribute.
         //php 7.2
         if (PHP_VERSION_ID < 70300) {
 
-            $path .= '; SameSite=' . $samesite;
+            $path .= '; SameSite=' . $sameSite;
             setcookie($cookie_name, $cookie_value, $expires, $path, $domain);
 
         } else {
@@ -401,20 +375,19 @@ class State
                 'expires' => $expires,
                 'path' => $path,
                 'domain' => $domain,
-                'samesite' => $samesite,
-                'secure' => $secure,
-                'httponly' => $httponly,
+                'samesite' => $sameSite,
+                'secure' => false,
+                'httponly' => false,
             ]);
         }
     }
 
-    private function deleteCookie($cookie_name, $path = '/', $domain = '')
+    private function deleteCookie($cookie_name): void
     {
-
-        return $this->createCookie($cookie_name, false, time() - 3600 * 25, $path, $domain);
+        $this->createCookie($cookie_name, false, time() - 3600 * 25);
     }
 
-    private function crc32AsHex($string)
+    private function crc32AsHex($string): string
     {
 
         $crc = crc32((string) $string);
@@ -425,26 +398,25 @@ class State
         return dechex($crc);
     }
 
-    private function assocFromString($string_state, $inner = '=>', $outer = '|||')
+    private function assocFromString($string_state)
     {
-
         $state = null;
         if (!empty($string_state)):
 
-            if (strpos($string_state, $outer) === false):
+            if (!str_contains($string_state, '|||')):
 
                 return $string_state;
 
             else:
 
-                $array = explode($outer, $string_state);
+                $array = explode('|||', $string_state);
 
                 $state = [];
 
-                foreach ($array as $key => $value) {
+                foreach ($array as $value) {
 
-                    [$realkey, $realvalue] = explode($inner, $value);
-                    $state[$realkey] = $realvalue;
+                    [$realKey, $realValue] = explode('=>', $value);
+                    $state[$realKey] = $realValue;
 
                 }
 
@@ -457,12 +429,12 @@ class State
 
     }
 
-    private function initializeStores()
+    private function initializeStores(): void
     {
 
-        // look for access to the raw HTTP cookie string. This is needed becuause OWA can set settings cookies
+        // look for access to the raw HTTP cookie string. This is needed because OWA can set settings cookies
         // with the same name under different subdomains. Multiple cookies with the same name are not
-        // available under $_COOKIE. Therefor OWA's cookie conainter must be an array of arrays.
+        // available under $_COOKIE. Therefor OWA's cookie container must be an array of arrays.
         if (isset($_SERVER['HTTP_COOKIE']) && strpos($_SERVER['HTTP_COOKIE'], ';')) {
 
             $raw_cookie_array = explode(';', $_SERVER['HTTP_COOKIE']);
@@ -484,7 +456,7 @@ class State
                         $v = str_replace("&gt;", ">", $v);
                     }
 
-                    $cookies[$n][] = $v;
+                    $this->cookies[$n][] = $v;
                 }
             }
         }
@@ -532,5 +504,3 @@ class State
 
 
 }
-
-?>

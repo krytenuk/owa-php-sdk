@@ -19,19 +19,19 @@ namespace OwaSdk\Tracker;
 
 /**
  * Tracking Event Class
- * 
+ *
  * @author      Peter Adams <peter@openwebanalytics.com>
  *
  */
-
-class TrackingEvent {
+class TrackingEvent
+{
 
     /**
      * Event Properties
      *
      * @var array
      */
-    var $properties = array();
+    var array $properties = [];
 
     /**
      * State
@@ -40,49 +40,52 @@ class TrackingEvent {
      */
     //var $state;
 
-    var $eventType;
+    var string $eventType;
 
     /**
      * Event guid
      *
-     * @var string
+     * @var string|null
      */
-    var $guid;
+    var ?string $guid;
 
     /**
      * Creation Timestamp in UNIX EPOC UTC
      *
      * @var int
      */
-    var $timestamp;
+    var int $timestamp;
 
     /**
      * Constructor
      * @access public
      */
-    function __construct() {
+    public function __construct()
+    {
 
         // Set GUID for event
         $this->guid = $this->set_guid();
         $this->timestamp = time();
         //needed?
         $this->set('guid', $this->guid);
-        $this->set('timestamp', $this->timestamp );
+        $this->set('timestamp', $this->timestamp);
     }
 
-    function getTimestamp() {
+    public function getTimestamp(): int
+    {
 
         return $this->timestamp;
     }
 
-    function set($name, $value) {
+    public function set($name, $value): void
+    {
 
         $this->properties[$name] = $value;
     }
 
-    function get($name) {
-
-        if(array_key_exists($name, $this->properties)) {
+    public function get($name)
+    {
+        if (array_key_exists($name, $this->properties)) {
             //print_r($this->properties[$name]);
             return $this->properties[$name];
         } else {
@@ -91,12 +94,13 @@ class TrackingEvent {
     }
 
     /**
-     * Adds new properties to the eventt without overwriting values
+     * Adds new properties to the event without overwriting values
      * for properties that are already set.
      *
-     * @param     array $properties
+     * @param array $properties
      */
-    function setNewProperties( $properties = array() ) {
+    public function setNewProperties(array $properties = []): void
+    {
 
         $this->properties = array_merge($properties, $this->properties);
 
@@ -105,37 +109,38 @@ class TrackingEvent {
     /**
      * Create guid from process id
      *
-     * @return    integer
-     * @access     private
+     * @return  string
+     * @access private
      */
-    function set_guid() {
+    public function set_guid(): string
+    {
 
         return $this->generateRandomUid();
     }
-    
-    private function generateRandomUid($seed='') {
 
-        $time = (string) time();
-        $random = $this->zeroFill( mt_rand( 0, 999999 ), 6 );
-        
-        $server = substr( getmypid(), 0, 3);
-        
+    private function generateRandomUid(): string
+    {
+        $time = (string)time();
+        $random = $this->zeroFill(mt_rand(0, 999999));
 
-        return $time.$random.$server;
+        $server = substr(getmypid(), 0, 3);
+
+
+        return $time . $random . $server;
     }
 
-	private function zeroFill( $number, $char_length ) {
-
-        return str_pad( (int) $number, $char_length, "0", STR_PAD_LEFT );
+    private function zeroFill($number): string
+    {
+        return str_pad((int)$number, 6, "0", STR_PAD_LEFT);
     }
 
-    function getProperties() {
-
+    public function getProperties(): array
+    {
         return $this->properties;
     }
 
-    function getEventType() {
-
+    public function getEventType()
+    {
         if (!empty($this->eventType)) {
             return $this->eventType;
         } elseif ($this->get('event_type')) {
@@ -146,21 +151,20 @@ class TrackingEvent {
         }
     }
 
-    function setEventType($value) {
+    public function setEventType($value): void
+    {
         $this->eventType = $value;
     }
 
-    function getGuid() {
-
+    public function getGuid(): ?string
+    {
         return $this->guid;
     }
-	
-	// move this to the tracker
-    function getSiteSpecificGuid($site_id) {
 
-        return $this->generateRandomUid( $site_id );
+    // move this to the tracker
+    public function getSiteSpecificGuid(): string
+    {
+        return $this->generateRandomUid();
     }
 
 }
-
-?>
