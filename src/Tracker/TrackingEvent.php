@@ -64,7 +64,7 @@ class TrackingEvent
     {
 
         // Set GUID for event
-        $this->guid = $this->set_guid();
+        $this->guid = $this->setGuid();
         $this->timestamp = time();
         //needed?
         $this->set('guid', $this->guid);
@@ -77,16 +77,16 @@ class TrackingEvent
         return $this->timestamp;
     }
 
-    public function set($name, $value): void
+    public function set($name, $value): static
     {
-
         $this->properties[$name] = $value;
+
+        return $this;
     }
 
     public function get($name)
     {
         if (array_key_exists($name, $this->properties)) {
-            //print_r($this->properties[$name]);
             return $this->properties[$name];
         } else {
             return false;
@@ -99,10 +99,11 @@ class TrackingEvent
      *
      * @param array $properties
      */
-    public function setNewProperties(array $properties = []): void
+    public function setNewProperties(array $properties = []): static
     {
-
         $this->properties = array_merge($properties, $this->properties);
+
+        return $this;
 
     }
 
@@ -112,9 +113,8 @@ class TrackingEvent
      * @return  string
      * @access private
      */
-    public function set_guid(): string
+    public function setGuid(): string
     {
-
         return $this->generateRandomUid();
     }
 
@@ -151,9 +151,11 @@ class TrackingEvent
         }
     }
 
-    public function setEventType($value): void
+    public function setEventType($value): static
     {
         $this->eventType = $value;
+
+        return $this;
     }
 
     public function getGuid(): ?string

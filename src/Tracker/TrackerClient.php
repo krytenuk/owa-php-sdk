@@ -151,25 +151,32 @@ use Psr\Http\Message\ResponseInterface;
         ];
     }
 
-    public function setPageTitle($value): void
+    public function setPageTitle($value): static
     {
         $this->pageview_event->set('page_title', $value);
+
+        return $this;
     }
 
-    public function setPageType($value): void
+    public function setPageType($value): static
     {
         $this->pageview_event->set('page_type', $value);
+
+        return $this;
     }
 
-    public function setProperty($name, $value): void
+    public function setProperty($name, $value): static
     {
         $this->setGlobalEventProperty($name, $value);
+
+        return $this;
     }
 
-    private function setGlobalEventProperty($name, $value): void
+    private function setGlobalEventProperty($name, $value): static
     {
-
         $this->global_event_properties[$name] = $value;
+
+        return $this;
     }
 
     private function getGlobalEventProperty($name)
@@ -609,69 +616,78 @@ use Psr\Http\Message\ResponseInterface;
         return md5($value);
     }
 
-    public function setCampaignNameKey($key): void
+    public function setCampaignNameKey($key): static
     {
 
         $campaign_params = $this->getSetting('campaign_params');
         $campaign_params['campaign'] = $key;
         $this->setSetting('campaign_params', $campaign_params);
+
+        return $this;
     }
 
-    public function setCampaignMediumKey($key): void
+    public function setCampaignMediumKey($key): static
     {
-
         $campaign_params = $this->getSetting('campaign_params');
         $campaign_params['medium'] = $key;
         $this->setSetting('campaign_params', $campaign_params);
+
+        return $this;
     }
 
-    public function setCampaignSourceKey($key): void
+    public function setCampaignSourceKey($key): static
     {
-
         $campaign_params = $this->getSetting('campaign_params');
         $campaign_params['source'] = $key;
         $this->setSetting('campaign_params', $campaign_params);
+
+        return $this;
     }
 
-    public function setCampaignSearchTermsKey($key): void
+    public function setCampaignSearchTermsKey($key): static
     {
-
         $campaign_params = $this->getSetting('campaign_params');
         $campaign_params['search_terms'] = $key;
         $this->setSetting('campaign_params', $campaign_params);
+
+        return $this;
     }
 
-    public function setCampaignAdKey($key): void
+    public function setCampaignAdKey($key): static
     {
-
         $campaign_params = $this->getSetting('campaign_params');
         $campaign_params['ad'] = $key;
         $this->setSetting('campaign_params', $campaign_params);
+
+        return $this;
     }
 
-    public function setCampaignAdTypeKey($key): void
+    public function setCampaignAdTypeKey($key): static
     {
 
         $campaign_params = $this->getSetting('campaign_params');
         $campaign_params['ad_type'] = $key;
         $this->setSetting('campaign_params', $campaign_params);
+
+        return $this;
     }
 
-    public function setUserName($value): void
+    public function setUserName($value): static
     {
-
         $this->setGlobalEventProperty('user_name', $value);
+
+        return $this;
     }
 
-    public function setUserEmail($value): void
+    public function setUserEmail($value): static
     {
-
         $this->setGlobalEventProperty('user_email', $value);
+
+        return $this;
     }
 
     function getCampaignProperties($event): array
     {
-
         $campaign_params = $this->getSetting('campaign_params');
         $campaign_properties = [];
 
@@ -953,7 +969,7 @@ use Psr\Http\Message\ResponseInterface;
      * @param string $scope
      * @return void
      */
-    public function setCustomVar(int $slot, string $name, string $value, string $scope = ''): void
+    public function setCustomVar(int $slot, string $name, string $value, string $scope = ''): static
     {
 
         $cv_param_name = 'cv' . $slot;
@@ -961,7 +977,7 @@ use Psr\Http\Message\ResponseInterface;
 
         if (strlen($cv_param_value) > 65) {
             sdk::debug('Custom variable name + value is too large. Must be less than 64 characters.');
-            return;
+            return $this;
         }
 
         switch ($scope) {
@@ -983,6 +999,8 @@ use Psr\Http\Message\ResponseInterface;
         }
 
         $this->setGlobalEventProperty($cv_param_name, $cv_param_value);
+
+        return $this;
     }
 
     public function getCustomVar($slot)

@@ -41,10 +41,11 @@ class OwaClient
         }
     }
 
-    public function setSetting($name, $value): void
+    public function setSetting($name, $value): static
     {
-
         $this->config[$name] = $value;
+
+        return $this;
     }
 
     public function getCredentials()

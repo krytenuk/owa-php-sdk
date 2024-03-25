@@ -22,7 +22,7 @@ class sdk
 
     private array $config;
 
-    public static bool $inDebug;
+    public static bool $inDebug = false;
 
     public function __construct($config = [])
     {
